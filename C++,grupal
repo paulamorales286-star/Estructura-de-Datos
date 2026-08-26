@@ -1,0 +1,123 @@
+procesos = [
+    {
+        "id": "P1",
+        "nombre": "Alerta de emergencia",
+        "prioridad": 1,
+        "tiempo": 3,
+        "datos": 100,
+        "estado": "Nuevo"
+    },
+    {
+        "id": "P2",
+        "nombre": "Procesamiento de tráfico",
+        "prioridad": 2,
+        "tiempo": 8,
+        "datos": 500,
+        "estado": "Nuevo"
+    },
+    {
+        "id": "P3",
+        "nombre": "Datos de sensores",
+        "prioridad": 3,
+        "tiempo": 5,
+        "datos": 250,
+        "estado": "Nuevo"
+    }
+]
+
+print("=== SIMULADOR SIGET ===")
+for proceso in procesos:
+    print(
+        proceso["id"],
+        ",",
+        proceso["nombre"],
+        "| Prioridad:", proceso["prioridad"],
+        "| Tiempo:", proceso["tiempo"], "s",
+        "| Datos:", proceso["datos"], "MB",
+        "| Estado:", proceso["estado"]
+    )
+
+
+def cambiar_estado(proceso, nuevo_estado):
+    proceso["estado"] = nuevo_estado
+
+    print(
+        proceso["id"], ",",
+        proceso["nombre"], "Estado:",
+        nuevo_estado
+    )
+
+
+print("\n=== SIMULACIÓN DE ESTADOS ===")
+
+
+for proceso in procesos:
+    cambiar_estado(proceso, "Listo")
+    cambiar_estado(proceso, "En Ejecución")
+    cambiar_estado(proceso, "Terminado")
+import time
+
+procesos = [
+    {"id": "P1", "nombre": "Alerta de emergencia", "prioridad": 1, "tiempo": 3, "datos": 100, "estado": "Nuevo"},
+    {"id": "P2", "nombre": "Procesamiento de tráfico", "prioridad": 2, "tiempo": 8, "datos": 500, "estado": "Nuevo"},
+    {"id": "P3", "nombre": "Datos de sensores", "prioridad": 3, "tiempo": 5, "datos": 250, "estado": "Nuevo"}
+]
+
+def cambiar_estado(proceso, nuevo_estado):
+    print(f"[ESTADO] {proceso['id']} -> {nuevo_estado}")
+    proceso["estado"] = nuevo_estado
+
+# --- ALGORITMO 1: PRIORIDAD ---
+print("\n=== REPORTE 1: PLANIFICACIÓN POR PRIORIDAD ===")
+
+procesos_prio = [p.copy() for p in procesos]
+
+for p in procesos_prio:
+    cambiar_estado(p, "Listo")
+
+procesos_prio.sort(key=lambda x: x["prioridad"])
+
+for p in procesos_prio:
+    cambiar_estado(p, "En Ejecución")
+    
+    while p["tiempo"] > 0:
+        print(f" -> Ejecutando {p['id']} ({p['nombre']}). Quedan {p['tiempo']}s")
+        time.sleep(0.3)
+        p["tiempo"] -= 1
+        
+    cambiar_estado(p, "Terminado")
+
+# --- ALGORITMO 2: ROUND ROBIN ---
+print("\n=== REPORTE 2: PLANIFICACIÓN ROUND ROBIN ===")
+
+procesos_rr = [p.copy() for p in procesos]
+quantum = 2
+
+for p in procesos_rr:
+    cambiar_estado(p, "Listo")
+
+while True:
+    procesos_activos = 0
+    
+    for p in procesos_rr:
+        if p["tiempo"] > 0:
+            procesos_activos += 1
+            cambiar_estado(p, "En Ejecución")
+            
+            tiempo_turno = min(quantum, p["tiempo"])
+            for _ in range(tiempo_turno):
+                print(f" -> Turno de {p['id']}. Restan {p['tiempo']}s")
+                time.sleep(0.3)
+                p["tiempo"] -= 1
+            
+            if p["tiempo"] > 0:
+                cambiar_estado(p, "Bloqueado")
+                print(f"   [I/O] {p['id']} en espera... regresa a la cola")
+                cambiar_estado(p, "Listo")
+            else:
+                cambiar_estado(p, "Terminado")
+                
+    if procesos_activos == 0:
+        break
+
+print("\n=== SIMULACIÓN FINALIZADA ===")
